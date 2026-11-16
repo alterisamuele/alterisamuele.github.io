@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Samuele Alteri · PhD, TéSA / ISAE-SUPAERO</title>
+<meta name="description" content="Samuele Alteri – PhD candidate in statistical signal processing (TéSA / ISAE-SUPAERO, Toulouse): carrier-phase ambiguity, delay and Doppler estimation, satellite swarms.">
+<meta name="author" content="Samuele Alteri">
+<meta property="og:title" content="Samuele Alteri · PhD, TéSA / ISAE-SUPAERO">
+<meta property="og:description" content="Bias-bounded estimation of phase ambiguity for precise positioning in a swarm of satellites.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='32' fill='%232747C9'/%3E%3Ctext x='32' y='42' font-family='Arial' font-weight='700' font-size='26' fill='white' text-anchor='middle'%3ESA%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F5F7FA; --surface:#FFFFFF; --ink:#121826; --muted:#586179; --rule:#DCE1EB;
+  --accent:#2747C9; --phase:#0B8577; --accent-soft:#E7ECFB;
+  --sky:#0F1526; --sky-ink:#EEF1FA; --sky-mut:#8F99B3; --sat:#F4F6FF; --link:#52D9C4; --pulse:#FFB648; --moon:#232B44; --moon-rim:#56628A;
+  --f-display:"Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --f-body:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0C1018; --surface:#131926; --ink:#E5E9F2; --muted:#98A2B8; --rule:#242C3D;
+  --accent:#8199FF; --phase:#3CC9B4; --accent-soft:#1A2240; --sky:#070A12; --moon:#1C2338; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0C1018; --surface:#131926; --ink:#E5E9F2; --muted:#98A2B8; --rule:#242C3D;
+  --accent:#8199FF; --phase:#3CC9B4; --accent-soft:#1A2240; --sky:#070A12; --moon:#1C2338; color-scheme:dark}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+img{max-width:100%}
+[hidden]{display:none!important}
+a{color:var(--accent);text-underline-offset:3px;text-decoration-thickness:1px}
+a:hover{text-decoration-thickness:2px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:3px}
+
+.shell{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:260px minmax(0,1fr);gap:64px;padding-block:56px 80px}
+.rail{position:sticky;top:40px;align-self:start;display:flex;flex-direction:column;gap:28px}
+.mono{font-family:var(--f-mono);font-size:12.5px;letter-spacing:.02em}
+.monogram{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);
+  font-family:var(--f-display);font-weight:800;font-size:26px;letter-spacing:.02em}
+.name{font-family:var(--f-display);font-weight:800;font-size:30px;line-height:1.05;margin:0;text-wrap:balance}
+.role{margin:6px 0 0;color:var(--muted);font-size:15.5px;line-height:1.45}
+nav ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+nav a{display:block;padding:5px 0;color:var(--muted);text-decoration:none;font-family:var(--f-display);font-weight:500;font-size:15px}
+nav a:hover,nav a.on{color:var(--ink)}
+nav a.on::before{content:"";display:inline-block;width:14px;height:2px;background:var(--phase);vertical-align:middle;margin-right:8px}
+.lang{display:inline-flex;align-self:flex-start;border:1px solid var(--rule);border-radius:999px;padding:3px;gap:2px;background:var(--surface)}
+.lang button{all:unset;cursor:pointer;font-family:var(--f-mono);font-size:12px;letter-spacing:.06em;padding:5px 11px;border-radius:999px;color:var(--muted)}
+.lang button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.lang button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.links{display:flex;flex-direction:column;gap:6px;font-size:15px}
+
+main{min-width:0;display:flex;flex-direction:column;gap:72px}
+section{scroll-margin-top:32px}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--phase);margin:0 0 14px}
+h2{font-family:var(--f-display);font-weight:700;font-size:28px;line-height:1.15;margin:0 0 20px;text-wrap:balance}
+p{margin:0 0 14px;max-width:66ch}
+
+.hero{display:flex;flex-direction:column;gap:22px}
+.hero h2.headline{font-family:var(--f-display);font-weight:800;font-size:clamp(30px,4.6vw,48px);line-height:1.08;margin:0;letter-spacing:-.01em;text-wrap:balance;max-width:20ch}
+.hero h2.headline em{font-style:normal;color:var(--accent)}
+.lede{font-size:19px;color:var(--ink);max-width:60ch}
+.figure{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:18px 18px 12px}
+.figure canvas{display:block;width:100%;height:210px}
+.caption{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted);margin-top:8px}
+.caption b{font-weight:500;color:var(--ink)}
+
+.sky{position:relative;border-radius:12px;overflow:hidden;background:var(--sky);border:1px solid var(--rule)}
+.sky canvas{display:block;width:100%;height:360px;cursor:grab;touch-action:pan-y}
+.sky canvas:active{cursor:grabbing}
+.sky .caption{position:absolute;left:0;right:0;bottom:0;margin:0;padding:10px 14px;color:var(--sky-mut)}
+.sky .caption b{color:var(--sky-ink)}
+@media (max-width:460px){.sky canvas{height:280px}}
+
+.thesis{border-left:3px solid var(--phase);padding:4px 0 4px 20px;margin:0 0 22px}
+.thesis .t{font-family:var(--f-display);font-weight:700;font-size:21px;line-height:1.3;margin:4px 0 8px;text-wrap:balance}
+.topics{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;padding:0;list-style:none}
+.topics li{font-family:var(--f-mono);font-size:12.5px;padding:5px 10px;border:1px solid var(--rule);border-radius:6px;color:var(--ink);background:var(--surface)}
+
+.pubs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.pub{display:grid;grid-template-columns:72px minmax(0,1fr);gap:18px;padding:18px 0;border-top:1px solid var(--rule)}
+.pub:last-child{border-bottom:1px solid var(--rule)}
+.pub .yr{font-family:var(--f-mono);font-size:13px;color:var(--muted);padding-top:3px;font-variant-numeric:tabular-nums}
+.pub .ttl{font-family:var(--f-display);font-weight:700;font-size:17px;line-height:1.35;margin:0 0 4px}
+.pub .au{color:var(--muted);font-size:15px;margin:0}
+.pub .au b{color:var(--ink);font-weight:600}
+.pub .ve{font-style:italic;font-size:15px;margin:2px 0 0}
+.tag{display:inline-block;font-family:var(--f-mono);font-style:normal;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:4px;margin-left:6px;vertical-align:2px}
+.tag.pub-ok{background:var(--accent-soft);color:var(--accent)}
+.tag.rev{border:1px solid var(--phase);color:var(--phase)}
+.tag.prep{border:1px dashed var(--muted);color:var(--muted)}
+
+.tl{list-style:none;margin:0;padding:0;position:relative}
+.tl::before{content:"";position:absolute;left:5px;top:8px;bottom:8px;width:1px;background:var(--rule)}
+.tl li{position:relative;padding:0 0 26px 30px}
+.tl li::before{content:"";position:absolute;left:0;top:7px;width:11px;height:11px;border-radius:50%;background:var(--bg);border:2px solid var(--muted)}
+.tl li.now::before{border-color:var(--phase);background:var(--phase)}
+.tl .when{font-family:var(--f-mono);font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tl .what{font-family:var(--f-display);font-weight:700;font-size:17px;margin:2px 0}
+.tl .where{color:var(--muted);font-size:15.5px;margin:0}
+
+.contact{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.contact a,.contact .mail{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border:1px solid var(--rule);border-radius:8px;text-decoration:none;color:var(--ink);background:var(--surface);min-width:0}
+.contact a:hover{border-color:var(--accent)}
+.contact .k{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.contact .v{font-family:var(--f-display);font-weight:500;overflow-wrap:anywhere}
+.mail button{all:unset;cursor:pointer;font-family:var(--f-mono);font-size:12px;color:var(--accent);margin-top:4px}
+footer{color:var(--muted);font-size:13.5px;border-top:1px solid var(--rule);padding-top:18px}
+
+@media (max-width:860px){
+  .shell{grid-template-columns:minmax(0,1fr);gap:36px;padding-block:28px 56px}
+  .rail{position:static;gap:18px}
+  .rail .id{display:flex;gap:16px;align-items:center}
+  .monogram{width:56px;height:56px;font-size:20px;flex:none}
+  nav ul{flex-direction:row;flex-wrap:wrap;gap:4px 18px}
+  nav a.on::before{display:none}
+  .links{flex-direction:row;flex-wrap:wrap;gap:6px 18px}
+  main{gap:56px}
+}
+@media (max-width:460px){
+  .pub{grid-template-columns:minmax(0,1fr);gap:4px}
+  .figure canvas{height:170px}
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <aside class="rail">
+    <div class="id">
+      <div class="monogram" aria-hidden="true">SA</div>
+      <div>
+        <h1 class="name">Samuele Alteri</h1>
+        <p class="role" data-i18n="role"></p>
+      </div>
+    </div>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="it">IT</button>
+      <button type="button" data-lang="en">EN</button>
+      <button type="button" data-lang="fr">FR</button>
+    </div>
+    <nav aria-label="Sections">
+      <ul>
+        <li><a href="#about" data-i18n="nav_about"></a></li>
+        <li><a href="#research" data-i18n="nav_research"></a></li>
+        <li><a href="#publications" data-i18n="nav_pubs"></a></li>
+        <li><a href="#path" data-i18n="nav_path"></a></li>
+        <li><a href="#contact" data-i18n="nav_contact"></a></li>
+      </ul>
+    </nav>
+    <div class="links mono">
+      <a href="https://www.researchgate.net/publication/389986428_Performance_Analysis_of_GNSS_Receivers_Tracking_evaluation_performance_via_Kalman_Filter_and_Fisher_Scoring_method" target="_blank" rel="noopener">ResearchGate ↗</a>
+      <a href="https://www.tesa.prd.fr/publications/" target="_blank" rel="noopener">TéSA ↗</a>
+    </div>
+  </aside>
+
+  <main>
+    <section id="about" class="hero">
+      <p class="eyebrow" data-i18n="eyebrow_about"></p>
+      <h2 class="headline" data-i18n-html="headline"></h2>
+      <p class="lede" data-i18n="lede"></p>
+      <figure class="sky" style="margin:0">
+        <canvas id="swarm" aria-label="Swarm of 50 satellites orbiting the Moon with inter-satellite links" role="img"></canvas>
+        <figcaption class="caption mono">
+          <span data-i18n-html="sw_left"></span>
+          <span data-i18n="sw_right"></span>
+        </figcaption>
+      </figure>
+    </section>
+
+    <section id="research">
+      <p class="eyebrow" data-i18n="eyebrow_research"></p>
+      <h2 data-i18n="h_research"></h2>
+      <div class="thesis">
+        <span class="mono" style="color:var(--muted)" data-i18n="thesis_label"></span>
+        <p class="t">Bias-bounded estimation of phase ambiguity for precise positioning in a swarm of satellites</p>
+        <p style="margin:0" data-i18n="thesis_where"></p>
+      </div>
+      <p data-i18n="research_p1"></p>
+      <figure class="figure" style="margin:8px 0 22px">
+        <canvas id="phase" aria-label="Phasor and wrapped carrier phase" role="img"></canvas>
+        <figcaption class="caption mono">
+          <span data-i18n-html="cap_left"></span>
+          <span data-i18n-html="cap_right"></span>
+        </figcaption>
+      </figure>
+      <p data-i18n="research_p2"></p>
+      <ul class="topics">
+        <li data-i18n="t1"></li><li data-i18n="t2"></li><li data-i18n="t3"></li>
+        <li data-i18n="t4"></li><li data-i18n="t5"></li><li data-i18n="t6"></li>
+      </ul>
+    </section>
+
+    <section id="publications">
+      <p class="eyebrow" data-i18n="eyebrow_pubs"></p>
+      <h2 data-i18n="h_pubs"></h2>
+      <ol class="pubs">
+        <li class="pub">
+          <span class="yr">2026</span>
+          <div>
+            <p class="ttl">Revisiting the Conditional Single Signal Model with Phase Uncertainty: Application to Time-Delay Estimation <span class="tag pub-ok" data-i18n="st_acc"></span></p>
+            <p class="au"><b>S. Alteri</b> et al.</p>
+            <p class="ve">Signal Processing (Elsevier)</p>
+          </div>
+        </li>
+        <li class="pub">
+          <span class="yr">2026</span>
+          <div>
+            <p class="ttl">Fisher Scoring Algorithm for Time-Delay and Doppler Estimation <span class="tag pub-ok" data-i18n="st_pub"></span></p>
+            <p class="au"><b>S. Alteri</b>, S. Labsir, L. Ortega</p>
+            <p class="ve">IEEE ICASSP 2026, Barcelona, Spain</p>
+          </div>
+        </li>
+        <li class="pub">
+          <span class="yr">2026</span>
+          <div>
+            <p class="ttl">Complexity-Accuracy Tradeoffs in Phase-Aided Delay Estimation with Doppler Model Misspecification <span class="tag prep" data-i18n="st_prep"></span></p>
+            <p class="au"><b>S. Alteri</b> et al.</p>
+            <p class="ve" data-i18n="ve_gnssr"></p>
+          </div>
+        </li>
+        <li class="pub">
+          <span class="yr">2025</span>
+          <div>
+            <p class="ttl">Performance Analysis of GNSS Receivers: Tracking Evaluation via Kalman Filter and Fisher Scoring Method</p>
+            <p class="au"><b>S. Alteri</b> · <span data-i18n="supervisors"></span> L. Ortega, S. Labsir</p>
+            <p class="ve"><span data-i18n="ve_msc"></span> · <a href="https://doi.org/10.13140/RG.2.2.33047.07840" target="_blank" rel="noopener">DOI 10.13140/RG.2.2.33047.07840</a></p>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <section id="path">
+      <p class="eyebrow" data-i18n="eyebrow_path"></p>
+      <h2 data-i18n="h_path"></h2>
+      <ol class="tl">
+        <li class="now">
+          <span class="when" data-i18n="w_phd"></span>
+          <p class="what" data-i18n="phd"></p>
+          <p class="where">TéSA · ISAE-SUPAERO, Toulouse</p>
+        </li>
+        <li>
+          <span class="when">2025</span>
+          <p class="what" data-i18n="enac"></p>
+          <p class="where">ENAC, Toulouse</p>
+        </li>
+        <li>
+          <span class="when">2024 – 2025</span>
+          <p class="what" data-i18n="ipsa"></p>
+          <p class="where">IPSA, Toulouse</p>
+        </li>
+        <li>
+          <span class="when">2025</span>
+          <p class="what" data-i18n="msc"></p>
+          <p class="where" data-i18n="sapienza"></p>
+        </li>
+      </ol>
+    </section>
+
+    <section id="contact">
+      <p class="eyebrow" data-i18n="eyebrow_contact"></p>
+      <h2 data-i18n="h_contact"></h2>
+      <p data-i18n="contact_p"></p>
+      <div class="contact">
+        <div class="mail" id="mailbox" hidden>
+          <span class="k">Email</span>
+          <span class="v" id="mailtext"></span>
+          <button type="button" id="copymail" data-i18n="copy"></button>
+        </div>
+        <a href="https://www.tesa.prd.fr/" target="_blank" rel="noopener"><span class="k" data-i18n="lab"></span><span class="v">TéSA, Toulouse ↗</span></a>
+        <a href="https://www.researchgate.net/publication/389986428_Performance_Analysis_of_GNSS_Receivers_Tracking_evaluation_performance_via_Kalman_Filter_and_Fisher_Scoring_method" target="_blank" rel="noopener"><span class="k">ResearchGate</span><span class="v">Samuele Alteri ↗</span></a>
+        <a href="https://www.linkedin.com/search/results/people/?keywords=Samuele%20Alteri" target="_blank" rel="noopener"><span class="k">LinkedIn</span><span class="v">Samuele Alteri ↗</span></a>
+      </div>
+    </section>
+
+    <footer data-i18n="footer"></footer>
+  </main>
+</div>
+
+<script>
+// ====== DA PERSONALIZZARE ======
+const CONTACT_EMAIL = ""; // es. "nome.cognome@isae-supaero.fr" — lasciare vuoto per nascondere il riquadro email
+// ===============================
+
+const T = {
+ it:{
+  role:"Dottorando in elaborazione statistica del segnale · TéSA / ISAE-SUPAERO, Toulouse",
+  nav_about:"Chi sono",nav_research:"Ricerca",nav_pubs:"Pubblicazioni",nav_path:"Percorso",nav_contact:"Contatti",
+  eyebrow_about:"Chi sono",
+  headline:"Stimo ritardi, Doppler e <em>ambiguità di fase</em> per il posizionamento preciso tra satelliti.",
+  lede:"Sono un ingegnere spaziale italiano e dottorando a Toulouse. Lavoro su come estrarre misure di distanza affidabili dai segnali radio di navigazione, con attenzione ai limiti teorici di prestazione e a ciò che succede quando il modello non corrisponde alla realtà.",
+  cap_left:"<b>fasore</b> e^{jφ(t)}",cap_right:"fase osservata modulo 2π → <b>ambiguità intera N</b>",
+  sw_left:"<b>50 satelliti</b> in orbita lunare · collegamenti inter-satellite",sw_right:"trascina per ruotare",
+  eyebrow_research:"Ricerca",h_research:"Fase della portante, ritardo e sciami di satelliti",
+  thesis_label:"Tesi di dottorato",thesis_where:"Laboratorio TéSA, Scuola dottorale ISAE-SUPAERO, Toulouse.",
+  research_p1:"La fase della portante permette misure di distanza millimetriche, ma è nota solo a meno di un numero intero di cicli. La mia tesi studia come stimare questa ambiguità controllando il bias dello stimatore, nel contesto di sciami di satelliti che devono localizzarsi a vicenda.",
+  research_p2:"Lavoro anche sulla stima congiunta di ritardo e Doppler: algoritmi di tipo Fisher scoring, limiti di Cramér-Rao, modelli di segnale condizionali con incertezza di fase, e casi reali come la riflettometria GNSS con dati CYGNSS.",
+  t1:"Elaborazione statistica del segnale",t2:"GNSS e navigazione",t3:"Ambiguità di fase",t4:"Stima di ritardo e Doppler",t5:"Limiti di Cramér-Rao",t6:"Sciami di satelliti",
+  eyebrow_pubs:"Pubblicazioni",h_pubs:"Articoli e tesi",
+  st_acc:"accettato",st_pub:"pubblicato",st_rev:"in revisione",st_prep:"in preparazione",
+  ve_gnssr:"Applicazione alla riflettometria GNSS (dati CYGNSS)",
+  supervisors:"relatori",ve_msc:"Tesi magistrale, Sapienza Università di Roma, marzo 2025",
+  eyebrow_path:"Percorso",h_path:"Formazione ed esperienza",
+  w_phd:"2025 – oggi",phd:"Dottorato di ricerca",enac:"Ingegnere di ricerca",ipsa:"Periodo di studio e ricerca per la tesi magistrale",
+  msc:"Laurea magistrale in Ingegneria Spaziale e Astronautica",sapienza:"Sapienza Università di Roma",
+  eyebrow_contact:"Contatti",h_contact:"Scrivimi",
+  contact_p:"Sono aperto a collaborazioni su navigazione satellitare, stima dei parametri e applicazioni spaziali.",
+  copy:"Copia indirizzo",copied:"Copiato",lab:"Laboratorio",
+  footer:"© 2026 Samuele Alteri · Toulouse"
+ },
+ en:{
+  role:"PhD candidate in statistical signal processing · TéSA / ISAE-SUPAERO, Toulouse",
+  nav_about:"About",nav_research:"Research",nav_pubs:"Publications",nav_path:"Background",nav_contact:"Contact",
+  eyebrow_about:"About",
+  headline:"I estimate delay, Doppler and <em>phase ambiguity</em> for precise positioning between satellites.",
+  lede:"I am an Italian space engineer and PhD candidate in Toulouse. I work on extracting reliable range measurements from radio-navigation signals, with a focus on theoretical performance bounds and on what happens when the model does not match reality.",
+  cap_left:"<b>phasor</b> e^{jφ(t)}",cap_right:"observed phase modulo 2π → <b>integer ambiguity N</b>",
+  sw_left:"<b>50 satellites</b> in lunar orbit · inter-satellite links",sw_right:"drag to rotate",
+  eyebrow_research:"Research",h_research:"Carrier phase, delay and satellite swarms",
+  thesis_label:"PhD thesis",thesis_where:"TéSA laboratory, ISAE-SUPAERO doctoral school, Toulouse.",
+  research_p1:"Carrier phase gives millimetre-level range measurements, but it is only known up to an integer number of cycles. My thesis studies how to estimate this ambiguity while keeping the estimator bias under control, for swarms of satellites that need to locate one another.",
+  research_p2:"I also work on joint delay and Doppler estimation: Fisher scoring algorithms, Cramér-Rao bounds, conditional signal models with phase uncertainty, and real-data cases such as GNSS reflectometry with CYGNSS data.",
+  t1:"Statistical signal processing",t2:"GNSS and navigation",t3:"Phase ambiguity",t4:"Delay and Doppler estimation",t5:"Cramér-Rao bounds",t6:"Satellite swarms",
+  eyebrow_pubs:"Publications",h_pubs:"Papers and theses",
+  st_acc:"accepted",st_pub:"published",st_rev:"under review",st_prep:"in preparation",
+  ve_gnssr:"Application to GNSS reflectometry (CYGNSS data)",
+  supervisors:"supervisors",ve_msc:"MSc thesis, Sapienza University of Rome, March 2025",
+  eyebrow_path:"Background",h_path:"Education and experience",
+  w_phd:"2025 – present",phd:"PhD",enac:"Research engineer",ipsa:"Study and research period for the MSc thesis",
+  msc:"MSc in Space and Astronautical Engineering",sapienza:"Sapienza University of Rome",
+  eyebrow_contact:"Contact",h_contact:"Get in touch",
+  contact_p:"I am open to collaborations on satellite navigation, parameter estimation and space applications.",
+  copy:"Copy address",copied:"Copied",lab:"Laboratory",
+  footer:"© 2026 Samuele Alteri · Toulouse"
+ },
+ fr:{
+  role:"Doctorant en traitement statistique du signal · TéSA / ISAE-SUPAERO, Toulouse",
+  nav_about:"Présentation",nav_research:"Recherche",nav_pubs:"Publications",nav_path:"Parcours",nav_contact:"Contact",
+  eyebrow_about:"Présentation",
+  headline:"J'estime le retard, le Doppler et l'<em>ambiguïté de phase</em> pour le positionnement précis entre satellites.",
+  lede:"Ingénieur spatial italien, je prépare un doctorat à Toulouse. Je travaille sur l'extraction de mesures de distance fiables à partir des signaux de radionavigation, en m'intéressant aux bornes de performance et à ce qui se passe quand le modèle ne correspond pas à la réalité.",
+  cap_left:"<b>phaseur</b> e^{jφ(t)}",cap_right:"phase observée modulo 2π → <b>ambiguïté entière N</b>",
+  sw_left:"<b>50 satellites</b> en orbite lunaire · liens inter-satellites",sw_right:"glisser pour tourner",
+  eyebrow_research:"Recherche",h_research:"Phase de porteuse, retard et essaims de satellites",
+  thesis_label:"Thèse de doctorat",thesis_where:"Laboratoire TéSA, école doctorale de l'ISAE-SUPAERO, Toulouse.",
+  research_p1:"La phase de la porteuse donne des mesures de distance millimétriques, mais elle n'est connue qu'à un nombre entier de cycles près. Ma thèse porte sur l'estimation de cette ambiguïté en maîtrisant le biais de l'estimateur, pour des essaims de satellites qui doivent se localiser mutuellement.",
+  research_p2:"Je travaille aussi sur l'estimation conjointe du retard et du Doppler : algorithmes de type Fisher scoring, bornes de Cramér-Rao, modèles de signal conditionnels avec incertitude de phase, et cas réels comme la réflectométrie GNSS avec les données CYGNSS.",
+  t1:"Traitement statistique du signal",t2:"GNSS et navigation",t3:"Ambiguïté de phase",t4:"Estimation retard-Doppler",t5:"Bornes de Cramér-Rao",t6:"Essaims de satellites",
+  eyebrow_pubs:"Publications",h_pubs:"Articles et mémoires",
+  st_acc:"accepté",st_pub:"publié",st_rev:"en révision",st_prep:"en préparation",
+  ve_gnssr:"Application à la réflectométrie GNSS (données CYGNSS)",
+  supervisors:"encadrants",ve_msc:"Mémoire de master, Université Sapienza de Rome, mars 2025",
+  eyebrow_path:"Parcours",h_path:"Formation et expérience",
+  w_phd:"2025 – aujourd'hui",phd:"Doctorat",enac:"Ingénieur de recherche",ipsa:"Séjour d'études et de recherche pour le mémoire de master",
+  msc:"Master en ingénierie spatiale et astronautique",sapienza:"Université Sapienza de Rome",
+  eyebrow_contact:"Contact",h_contact:"Me contacter",
+  contact_p:"Je suis ouvert aux collaborations en navigation par satellite, estimation de paramètres et applications spatiales.",
+  copy:"Copier l'adresse",copied:"Copié",lab:"Laboratoire",
+  footer:"© 2026 Samuele Alteri · Toulouse"
+ }
+};
+
+let lang = "it";
+function setLang(l){
+  if(!T[l]) l="it";
+  lang=l;
+  document.documentElement.lang=l;
+  document.querySelectorAll("[data-i18n]").forEach(el=>{const v=T[l][el.dataset.i18n]; if(v!==undefined) el.textContent=v;});
+  document.querySelectorAll("[data-i18n-html]").forEach(el=>{const v=T[l][el.dataset.i18nHtml]; if(v!==undefined) el.innerHTML=v;});
+  document.querySelectorAll(".lang button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.lang===l ? "true":"false"));
+  try{localStorage.setItem("sa-lang",l)}catch(e){}
+}
+document.querySelectorAll(".lang button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.lang)));
+let initial="it";
+try{const s=localStorage.getItem("sa-lang"); if(s&&T[s]) initial=s; else {const n=(navigator.language||"it").slice(0,2); if(T[n]) initial=n;}}catch(e){}
+setLang(initial);
+
+if(CONTACT_EMAIL){
+  document.getElementById("mailbox").hidden=false;
+  document.getElementById("mailtext").textContent=CONTACT_EMAIL;
+  const btn=document.getElementById("copymail");
+  const selectMail=()=>{const r=document.createRange(); r.selectNodeContents(document.getElementById("mailtext")); const s=getSelection(); s.removeAllRanges(); s.addRange(r);};
+  btn.addEventListener("click",()=>{
+    const done=()=>{btn.textContent=T[lang].copied; setTimeout(()=>btn.textContent=T[lang].copy,1600);};
+    try{navigator.clipboard.writeText(CONTACT_EMAIL).then(done,selectMail);}catch(e){selectMail();}
+  });
+}
+
+const links=[...document.querySelectorAll("nav a")];
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle("on",a.getAttribute("href")==="#"+e.target.id));}})},{rootMargin:"-40% 0px -55% 0px"});
+document.querySelectorAll("main section").forEach(s=>obs.observe(s));
+
+// lunar swarm
+(function(){
+  const c=document.getElementById("swarm"), ctx=c.getContext("2d");
+  const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const root=document.documentElement;
+  const css=n=>getComputedStyle(root).getPropertyValue(n).trim();
+  let W=0,H=0;
+  function size(){const d=window.devicePixelRatio||1, r=c.getBoundingClientRect(); W=r.width; H=r.height; c.width=Math.round(W*d); c.height=Math.round(H*d); ctx.setTransform(d,0,0,d,0,0);}
+  let seed=11; const rnd=()=>{seed=(seed*16807)%2147483647; return (seed-1)/2147483646;};
+  const sats=[];
+  for(let p=0;p<5;p++){
+    const O=p*2*Math.PI/5+rnd()*0.2, inc=0.75+rnd()*0.95, r=1.5+p*0.13+rnd()*0.05;
+    for(let k=0;k<10;k++) sats.push({r,inc,O,th0:k*2*Math.PI/10+p*0.37+rnd()*0.15,w:0.32*Math.pow(r/1.5,-1.5)});
+  }
+  const stars=Array.from({length:180},()=>({x:rnd(),y:rnd(),s:rnd()*1.2+0.3,ph:rnd()*6.28,b:0.25+rnd()*0.6}));
+  const craters=Array.from({length:14},()=>{const a=rnd()*6.28, d=Math.sqrt(rnd())*0.78; return {x:Math.cos(a)*d,y:Math.sin(a)*d,r:0.04+rnd()*0.11};});
+  let yaw=0.4, pitch=0.42, drag=null;
+
+  function proj(r,inc,O,th,S,cx,cy){
+    const x=r*Math.cos(th), y0=r*Math.sin(th);
+    const y=y0*Math.cos(inc), z=y0*Math.sin(inc);
+    const X=x*Math.cos(O)-y*Math.sin(O), Y=x*Math.sin(O)+y*Math.cos(O);
+    const x1=X*Math.cos(yaw)-Y*Math.sin(yaw), y1=X*Math.sin(yaw)+Y*Math.cos(yaw);
+    const y2=y1*Math.cos(pitch)-z*Math.sin(pitch), z2=y1*Math.sin(pitch)+z*Math.cos(pitch);
+    const k=6/(6+y2);
+    return {sx:cx+x1*S*k, sy:cy-z2*S*k, d:y2, k, hid:(y2>0 && Math.hypot(x1,z2)<1), X:X, Y:Y, Z:z};
+  }
+
+  function frame(t){
+    const sky=css("--sky"), ink=css("--sat"), link=css("--link"), pulse=css("--pulse"), moon=css("--moon"), rim=css("--moon-rim");
+    ctx.fillStyle=sky; ctx.fillRect(0,0,W,H);
+    for(const s of stars){
+      const a=s.b*(reduce?1:0.65+0.35*Math.sin(t*1.3+s.ph));
+      ctx.globalAlpha=a; ctx.fillStyle=ink; ctx.fillRect(s.x*W, s.y*H, s.s, s.s);
+    }
+    ctx.globalAlpha=1;
+    const S=Math.min(W*0.2,H*0.2), cx=W*0.5, cy=H*0.46;
+    const P=sats.map(s=>{const th=s.th0+s.w*t; return Object.assign(proj(s.r,s.inc,s.O,th,S,cx,cy),{th});});
+
+    function trails(far){
+      ctx.lineWidth=1.2;
+      sats.forEach((s,i)=>{
+        if((P[i].d>0)!==far) return;
+        let prev=null;
+        for(let j=0;j<26;j++){
+          const q=proj(s.r,s.inc,s.O,P[i].th-j*0.045,S,cx,cy);
+          if(prev && !q.hid && !prev.hid){
+            ctx.globalAlpha=(1-j/26)*0.38*(far?0.55:1);
+            ctx.strokeStyle=link; ctx.beginPath(); ctx.moveTo(prev.sx,prev.sy); ctx.lineTo(q.sx,q.sy); ctx.stroke();
+          }
+          prev=q;
+        }
+      });
+      ctx.globalAlpha=1;
+    }
+    function links(far){
+      for(let i=0;i<P.length;i++) for(let j=i+1;j<P.length;j++){
+        const a=P[i], b=P[j];
+        if(a.hid||b.hid) continue;
+        if(((a.d+b.d)/2>0)!==far) continue;
+        const dd=Math.hypot(a.X-b.X,a.Y-b.Y,a.Z-b.Z);
+        if(dd>0.78) continue;
+        const f=1-dd/0.78;
+        ctx.globalAlpha=f*0.55*(far?0.5:1); ctx.strokeStyle=link; ctx.lineWidth=0.8+f;
+        ctx.beginPath(); ctx.moveTo(a.sx,a.sy); ctx.lineTo(b.sx,b.sy); ctx.stroke();
+        if((i*7+j*13)%4===0){
+          const u=((t*0.55+(i*0.37+j*0.61))%1+1)%1;
+          ctx.globalAlpha=f*(far?0.6:1); ctx.fillStyle=pulse;
+          ctx.beginPath(); ctx.arc(a.sx+(b.sx-a.sx)*u, a.sy+(b.sy-a.sy)*u, 1.6+f, 0, 6.283); ctx.fill();
+        }
+      }
+      ctx.globalAlpha=1;
+    }
+    trails(true); links(true);
+    const R=S;
+    ctx.save(); ctx.beginPath(); ctx.arc(cx,cy,R,0,6.283); ctx.fillStyle=moon; ctx.fill(); ctx.clip();
+    ctx.globalAlpha=0.35; ctx.strokeStyle=rim; ctx.lineWidth=1;
+    const rot=yaw*0.6;
+    for(const cr of craters){
+      const x=cr.x*Math.cos(rot)-cr.y*Math.sin(rot), y=cr.x*Math.sin(rot)+cr.y*Math.cos(rot);
+      ctx.beginPath(); ctx.ellipse(cx+x*R, cy+y*R*0.92, cr.r*R, cr.r*R*0.85, 0, 0, 6.283); ctx.stroke();
+    }
+    ctx.globalAlpha=1;
+    const g=ctx.createLinearGradient(cx-R,cy-R,cx+R,cy+R);
+    g.addColorStop(0,"rgba(255,255,255,0.10)"); g.addColorStop(0.55,"rgba(0,0,0,0)"); g.addColorStop(1,"rgba(0,0,0,0.35)");
+    ctx.fillStyle=g; ctx.fillRect(cx-R,cy-R,2*R,2*R);
+    ctx.restore();
+    ctx.strokeStyle=rim; ctx.globalAlpha=0.7; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(cx,cy,R,0,6.283); ctx.stroke(); ctx.globalAlpha=1;
+    trails(false); links(false);
+    P.map((p,i)=>i).sort((a,b)=>P[b].d-P[a].d).forEach(i=>{
+      const p=P[i]; if(p.hid) return;
+      const sz=2.2*p.k, near=p.d<0;
+      ctx.globalAlpha=near?1:0.6;
+      if(near){ctx.fillStyle=link; ctx.globalAlpha=0.18; ctx.beginPath(); ctx.arc(p.sx,p.sy,sz*3.2,0,6.283); ctx.fill(); ctx.globalAlpha=1;}
+      ctx.strokeStyle=ink; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(p.sx-sz*2.6,p.sy); ctx.lineTo(p.sx+sz*2.6,p.sy); ctx.stroke();
+      ctx.fillStyle=ink; ctx.fillRect(p.sx-sz/2,p.sy-sz/2,sz,sz);
+    });
+    ctx.globalAlpha=1;
+  }
+
+  let t=0, last=null, running=false, visible=true;
+  function loop(ts){
+    if(!running) return;
+    if(last!==null){const dt=Math.min(0.05,(ts-last)/1000); t+=dt; if(!drag) yaw+=dt*0.05;}
+    last=ts; frame(t); requestAnimationFrame(loop);
+  }
+  function start(){ if(reduce||running||!visible) return; running=true; last=null; requestAnimationFrame(loop); }
+  function stop(){ running=false; }
+  size(); frame(t);
+  addEventListener("resize",()=>{size(); frame(t);});
+  try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>frame(t));}catch(e){}
+  new IntersectionObserver(es=>{visible=es[0].isIntersecting; visible?start():stop();}).observe(c);
+  c.addEventListener("pointerdown",e=>{drag={x:e.clientX,y:e.clientY}; try{c.setPointerCapture(e.pointerId)}catch(_){}} );
+  c.addEventListener("pointermove",e=>{
+    if(!drag) return;
+    yaw+=(e.clientX-drag.x)*0.006; pitch=Math.max(-1.2,Math.min(1.2,pitch+(e.clientY-drag.y)*0.004));
+    drag={x:e.clientX,y:e.clientY}; if(!running) frame(t);
+  });
+  const end=()=>{drag=null;}; c.addEventListener("pointerup",end); c.addEventListener("pointercancel",end);
+  start();
+})();
+
+// phasor + wrapped phase
+(function(){
+  const c=document.getElementById("phase"), ctx=c.getContext("2d");
+  const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  let W=0,H=0,dpr=1;
+  function size(){dpr=window.devicePixelRatio||1; const r=c.getBoundingClientRect(); W=r.width; H=r.height; c.width=W*dpr; c.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);}
+  const f=0.18, f0=2*Math.PI*0.37;
+  const phi=t=>2*Math.PI*f*t + 0.25*Math.sin(0.7*t) + f0;
+  const wrap=x=>((x+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;
+  function draw(t){
+    const ink=css("--ink"), mut=css("--muted"), rule=css("--rule"), acc=css("--accent"), ph=css("--phase");
+    ctx.clearRect(0,0,W,H);
+    ctx.font='11px "JetBrains Mono", ui-monospace, monospace';
+    const R=Math.min(H*0.38, W*0.14), cx=R+14, cy=H/2;
+    ctx.strokeStyle=rule; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.arc(cx,cy,R,0,2*Math.PI); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx-R-6,cy); ctx.lineTo(cx+R+6,cy); ctx.moveTo(cx,cy-R-6); ctx.lineTo(cx,cy+R+6); ctx.stroke();
+    const p=phi(t), x=cx+R*Math.cos(p), y=cy-R*Math.sin(p);
+    ctx.strokeStyle=acc; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x,y); ctx.stroke();
+    ctx.fillStyle=acc; ctx.beginPath(); ctx.arc(x,y,4,0,2*Math.PI); ctx.fill();
+    const wp=wrap(p);
+    ctx.strokeStyle=ph; ctx.lineWidth=1.5; ctx.beginPath();
+    ctx.arc(cx,cy,R*0.32,0,-wp,wp>0); ctx.stroke();
+    const x0=cx+R+36, x1=W-8, top=16, bot=H-22, mid=(top+bot)/2, amp=(bot-top)/2;
+    if(x1-x0<60) return;
+    ctx.strokeStyle=rule; ctx.lineWidth=1;
+    [top,mid,bot].forEach(yy=>{ctx.beginPath(); ctx.moveTo(x0,yy); ctx.lineTo(x1,yy); ctx.stroke();});
+    ctx.fillStyle=mut; ctx.textAlign="right"; ctx.textBaseline="middle";
+    ctx.fillText("π",x0-6,top); ctx.fillText("0",x0-6,mid); ctx.fillText("−π",x0-6,bot);
+    const span=14;
+    const N=Math.max(80,Math.floor(x1-x0));
+    ctx.strokeStyle=ph; ctx.lineWidth=1.8; ctx.beginPath();
+    let prev=null;
+    for(let i=0;i<=N;i++){
+      const tt=t-span+span*i/N, w=wrap(phi(tt)), xx=x0+(x1-x0)*i/N, yy=mid-amp*w/Math.PI;
+      if(prev!==null && Math.abs(w-prev)>Math.PI){ctx.stroke(); ctx.beginPath(); ctx.moveTo(xx,yy);} else if(i===0) ctx.moveTo(xx,yy); else ctx.lineTo(xx,yy);
+      prev=w;
+    }
+    ctx.stroke();
+    const cycles=Math.floor((p+Math.PI)/(2*Math.PI));
+    ctx.fillStyle=ink; ctx.textAlign="left"; ctx.textBaseline="alphabetic";
+    ctx.fillText("N = "+cycles+" ?", x0, H-4);
+    ctx.fillStyle=mut; ctx.textAlign="right"; ctx.fillText("t", x1, H-4);
+    ctx.fillStyle=acc; ctx.beginPath(); ctx.arc(x1, mid-amp*wp/Math.PI, 3.5, 0, 2*Math.PI); ctx.fill();
+  }
+  size(); addEventListener("resize",()=>{size(); if(reduce) draw(6);});
+  if(reduce){draw(6);return;}
+  let t0=null; const start=6;
+  function loop(ts){ if(t0===null) t0=ts; draw(start+(ts-t0)/1000); requestAnimationFrame(loop);}
+  draw(start); requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
